@@ -89,7 +89,7 @@ Before running this application, make sure you have the following installed:
 
 3. **Install Python dependencies:**
    ```bash
-   pip install django djangorestframework django-cors-headers
+   pip install -r "requirements.txt"
    ```
 
 4. **Run database migrations:**
