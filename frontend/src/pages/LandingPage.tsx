@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import TaskService, { Task } from '../services/taskService';
 import TaskForm from '../components/TaskForm';
 import TaskItem from '../components/TaskItem';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import EditTaskModal from '../components/EditTaskModal';
+import { TaskListSkeleton } from '../components/TaskListSkeleton';
+import StatsSkeleton from '../components/StatsSkeleton';
 
 export default function LandingPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -9,6 +13,22 @@ export default function LandingPage() {
     const [error, setError] = useState<string | null>(null);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+    
+    // Modal states
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; task: Task | null }>({
+        isOpen: false,
+        task: null
+    });
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; task: Task | null }>({
+        isOpen: false,
+        task: null
+    });
+    
+    // Loading states
+    const [isCreating, setIsCreating] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [toggleStates, setToggleStates] = useState<Record<number, boolean>>({});
 
     // Load tasks on component mount
     useEffect(() => {
@@ -31,6 +51,7 @@ export default function LandingPage() {
 
     const handleCreateTask = async (title: string, description: string) => {
         try {
+            setIsCreating(true);
             setError(null);
             const newTask = await TaskService.createTask({
                 title,
@@ -41,31 +62,37 @@ export default function LandingPage() {
         } catch (err) {
             setError('Failed to create task. Please try again.');
             console.error('Error creating task:', err);
+        } finally {
+            setIsCreating(false);
         }
     };
 
     const handleEditTask = async (title: string, description: string) => {
-        if (!editingTask?.id) return;
+        if (!editModal.task?.id) return;
 
         try {
+            setIsUpdating(true);
             setError(null);
-            const updatedTask = await TaskService.updateTask(editingTask.id, {
+            const updatedTask = await TaskService.updateTask(editModal.task.id, {
                 title,
                 description,
-                completed: editingTask.completed
+                completed: editModal.task.completed
             });
             setTasks(prev => prev.map(task => 
-                task.id === editingTask.id ? updatedTask : task
+                task.id === editModal.task?.id ? updatedTask : task
             ));
-            setEditingTask(null);
+            setEditModal({ isOpen: false, task: null });
         } catch (err) {
             setError('Failed to update task. Please try again.');
             console.error('Error updating task:', err);
+        } finally {
+            setIsUpdating(false);
         }
     };
 
     const handleToggleComplete = async (id: number, completed: boolean) => {
         try {
+            setToggleStates(prev => ({ ...prev, [id]: true }));
             setError(null);
             const updatedTask = await TaskService.toggleTaskCompletion(id, completed);
             setTasks(prev => prev.map(task => 
@@ -74,21 +101,49 @@ export default function LandingPage() {
         } catch (err) {
             setError('Failed to update task status. Please try again.');
             console.error('Error toggling task completion:', err);
+        } finally {
+            setToggleStates(prev => ({ ...prev, [id]: false }));
         }
     };
 
-    const handleDeleteTask = async (id: number) => {
-        if (!window.confirm('Are you sure you want to delete this task?')) {
-            return;
-        }
+    const handleDeleteTask = async () => {
+        if (!deleteModal.task?.id) return;
 
         try {
+            setIsDeleting(true);
             setError(null);
-            await TaskService.deleteTask(id);
-            setTasks(prev => prev.filter(task => task.id !== id));
+            await TaskService.deleteTask(deleteModal.task.id);
+            setTasks(prev => prev.filter(task => task.id !== deleteModal.task?.id));
+            setDeleteModal({ isOpen: false, task: null });
         } catch (err) {
             setError('Failed to delete task. Please try again.');
             console.error('Error deleting task:', err);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // Helper functions for modal actions
+    const openEditModal = (task: Task) => {
+        setEditModal({ isOpen: true, task });
+    };
+
+    const closeEditModal = () => {
+        if (!isUpdating) {
+            setEditModal({ isOpen: false, task: null });
+        }
+    };
+
+    const openDeleteModal = (id: number) => {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            setDeleteModal({ isOpen: true, task });
+        }
+    };
+
+    const closeDeleteModal = () => {
+        if (!isDeleting) {
+            setDeleteModal({ isOpen: false, task: null });
         }
     };
 
@@ -103,8 +158,9 @@ export default function LandingPage() {
     const completionRate = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 flex">
+            {/* Centered Container */}
+            <div className="max-w-6xl mx-auto my-auto w-full py-8 px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <header className="text-center mb-12">
                     <div className="flex items-center justify-center mb-6">
@@ -115,7 +171,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                        YAHSHUA HRIS Task Manager
+                        YAHSHUA HRIS - Task Manager
                     </h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                         Stay organized and productive with our simple task management system
@@ -143,7 +199,10 @@ export default function LandingPage() {
                 )}
 
                 {/* Statistics Dashboard */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {loading ? (
+                    <StatsSkeleton />
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
@@ -199,7 +258,8 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </div>
-                </div>
+                    </div>
+                )}
 
                 {/* Task Form */}
                 <TaskForm
@@ -208,6 +268,7 @@ export default function LandingPage() {
                     initialTitle={editingTask?.title || ''}
                     initialDescription={editingTask?.description || ''}
                     isEditing={!!editingTask}
+                    isSubmitting={isCreating}
                 />
 
                 {/* Filter Tabs */}
@@ -234,12 +295,7 @@ export default function LandingPage() {
 
                 {/* Loading State */}
                 {loading ? (
-                    <div className="text-center py-16">
-                        <div className="inline-flex items-center space-x-2">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                            <span className="text-gray-600 font-medium">Loading tasks...</span>
-                        </div>
-                    </div>
+                    <TaskListSkeleton />
                 ) : (
                     /* Task List */
                     <div className="space-y-4">
@@ -249,8 +305,8 @@ export default function LandingPage() {
                                     key={task.id}
                                     task={task}
                                     onToggleComplete={handleToggleComplete}
-                                    onEdit={setEditingTask}
-                                    onDelete={handleDeleteTask}
+                                    onEdit={(task) => openEditModal(task)}
+                                    onDelete={openDeleteModal}
                                 />
                             ))
                         ) : (
@@ -275,6 +331,23 @@ export default function LandingPage() {
                         )}
                     </div>
                 )}
+
+                {/* Modals */}
+                <DeleteConfirmationModal
+                    isOpen={deleteModal.isOpen}
+                    onClose={closeDeleteModal}
+                    onConfirm={handleDeleteTask}
+                    taskTitle={deleteModal.task?.title || ''}
+                    isDeleting={isDeleting}
+                />
+
+                <EditTaskModal
+                    isOpen={editModal.isOpen}
+                    onClose={closeEditModal}
+                    onSubmit={handleEditTask}
+                    task={editModal.task}
+                    isUpdating={isUpdating}
+                />
             </div>
         </div>
     );

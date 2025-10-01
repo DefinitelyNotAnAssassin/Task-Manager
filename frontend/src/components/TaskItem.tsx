@@ -9,7 +9,6 @@ interface TaskItemProps {
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEdit, onDelete }) => {
-  const [isHovered, setIsHovered] = React.useState(false);
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return '';
@@ -27,8 +26,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEdit, onD
       className={`group bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-md ${
         task.completed ? 'bg-gray-50' : 'bg-white'
       }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+
     >
       <div className="p-4">
         <div className="flex items-start space-x-4">
@@ -88,9 +86,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onEdit, onD
               </div>
 
               {/* Action Buttons */}
-              <div className={`flex items-center space-x-1 transition-all duration-200 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
-              }`}>
+              <div className={`flex items-center space-x-1 transition-all duration-200 `}>
                 <button
                   onClick={() => onEdit(task)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all duration-200"
