@@ -44,7 +44,7 @@ OperationTest/
     └── ...
 ```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 - **Django 5.2.6** - Web framework
@@ -67,7 +67,7 @@ Before running this application, make sure you have the following installed:
 - **Node.js 16+** and **npm**
 - **Git** (for cloning the repository)
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 ### Backend Setup (Django)
 
@@ -129,7 +129,7 @@ Before running this application, make sure you have the following installed:
 
    The frontend application will be available at: `http://localhost:5173`
 
-## 🔌 API Endpoints
+## API Endpoints
 
 The backend provides the following REST API endpoints:
 
@@ -257,41 +257,6 @@ const API_BASE_URL = 'http://localhost:8000/tasks';
 6. **Toggle completion** by clicking the checkbox
 7. **Delete tasks** by clicking the delete button (appears on hover)
 
-## 🧪 Testing
-
-### Manual Testing Checklist
-
-- [ ] Create a new task with title only
-- [ ] Create a new task with title and description
-- [ ] Edit an existing task
-- [ ] Mark a task as completed
-- [ ] Mark a completed task as pending
-- [ ] Delete a task
-- [ ] Filter tasks by status
-- [ ] Test responsive design on mobile
-
-### API Testing
-
-You can test the API endpoints using tools like:
-- **Postman**
-- **curl**
-- **Django REST Framework Browsable API** at `http://localhost:8000/tasks/`
-
-Example curl commands:
-```bash
-# List all tasks
-curl http://localhost:8000/tasks/
-
-# Create a task
-curl -X POST http://localhost:8000/tasks/ \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Test Task", "description": "Test Description", "completed": false}'
-
-# Update task completion status
-curl -X PATCH http://localhost:8000/tasks/1/ \
-  -H "Content-Type: application/json" \
-  -d '{"completed": true}'
-```
 
 ## 🚨 Troubleshooting
 
@@ -313,35 +278,10 @@ curl -X PATCH http://localhost:8000/tasks/1/ \
    - Delete `node_modules` and run `npm install` again
    - Check that all dependencies are properly installed
 
-### Development Notes
-
-- **Database Reset:** Delete `db.sqlite3` and re-run migrations to reset data
-- **CORS for Production:** Update CORS settings for production deployment
-- **Environment Variables:** Consider using environment variables for API URLs in production
-
-## 🔮 Future Enhancements
-
-Potential features for future development:
-
-- [ ] User authentication and authorization
-- [ ] Task categories and tags
-- [ ] Due dates and reminders
-- [ ] Task prioritization
-- [ ] Search functionality
-- [ ] Bulk operations
-- [ ] Task attachments
-- [ ] Data export/import
-- [ ] Real-time updates with WebSockets
-- [ ] Progressive Web App (PWA) features
 
 ## 📄 License
 
 This project is for educational and demonstration purposes.
 
-## 👥 Development Team
-
-Developed as part of a software development operational test, demonstrating full-stack development skills with Django REST Framework and React.
 
 ---
-
-**Happy Task Managing! 📝✅**
